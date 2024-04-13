@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator</title>
+    <link rel="stylesheet" href="../output.css">
+</head>
+
+<body class="bg-gray-50/50">
+    <main class="container mx-auto my-20 text-center">
+        <h2 class="text-4xl font-semibold tracking-wide mb-10">Calculator</h2>
+        <div class="max-w-sm mx-auto card border shadow rounded bg-white" id="calculator">
+            <div class="card-header px-4 py-2 border-b text-lg text-right" id="calculate-result">0</div>
+            <div class="card-body p-4">
+                <div class="actions grid grid-cols-4 gap-x-6 gap-y-4">
+                    <button
+                        class="w-full h-12 inline-flex justify-center items-center border rounded-lg drop-shadow-md active:drop-shadow-none shadow hover:shadow-none mx-auto p-2 text-xl text-center">AC</button>
+                    <button
+                        class="w-full h-12 inline-flex justify-center items-center border rounded-lg drop-shadow-md active:drop-shadow-none shadow hover:shadow-none mx-auto p-2 text-xl text-center">C</button>
+                    <button
+                        class="w-full h-12 inline-flex justify-center items-center border rounded-lg drop-shadow-md active:drop-shadow-none shadow hover:shadow-none mx-auto p-2 text-xl text-center">%</button>
+                    <button
+                        class="w-full h-12 inline-flex justify-center items-center border rounded-lg drop-shadow-md active:drop-shadow-none shadow hover:shadow-none mx-auto p-2 text-xl text-center">/</button>
+                    <button
+                        class="w-full h-12 inline-flex justify-center items-center border rounded-lg drop-shadow-md active:drop-shadow-none shadow hover:shadow-none mx-auto p-2 text-center">7</button>
+                    <button
+                        class="w-full h-12 inline-flex justify-center items-center border rounded-lg drop-shadow-md active:drop-shadow-none shadow hover:shadow-none mx-auto p-2 text-center">8</button>
+                    <button
+                        class="w-full h-12 inline-flex justify-center items-center border rounded-lg drop-shadow-md active:drop-shadow-none shadow hover:shadow-none mx-auto p-2 text-center">9</button>
+                    <button
+                        class="w-full h-12 inline-flex justify-center items-center border rounded-lg drop-shadow-md active:drop-shadow-none shadow hover:shadow-none mx-auto p-2 text-xl text-center">*</button>
+                    <button
+                        class="w-full h-12 inline-flex justify-center items-center border rounded-lg drop-shadow-md active:drop-shadow-none shadow hover:shadow-none mx-auto p-2 text-center">4</button>
+                    <button
+                        class="w-full h-12 inline-flex justify-center items-center border rounded-lg drop-shadow-md active:drop-shadow-none shadow hover:shadow-none mx-auto p-2 text-center">5</button>
+                    <button
+                        class="w-full h-12 inline-flex justify-center items-center border rounded-lg drop-shadow-md active:drop-shadow-none shadow hover:shadow-none mx-auto p-2 text-center">6</button>
+                    <button
+                        class="w-full h-12 inline-flex justify-center items-center border rounded-lg drop-shadow-md active:drop-shadow-none shadow hover:shadow-none mx-auto p-2 text-xl text-center">+</button>
+                    <button
+                        class="w-full h-12 inline-flex justify-center items-center border rounded-lg drop-shadow-md active:drop-shadow-none shadow hover:shadow-none mx-auto p-2 text-center">1</button>
+                    <button
+                        class="w-full h-12 inline-flex justify-center items-center border rounded-lg drop-shadow-md active:drop-shadow-none shadow hover:shadow-none mx-auto p-2 text-center">2</button>
+                    <button
+                        class="w-full h-12 inline-flex justify-center items-center border rounded-lg drop-shadow-md active:drop-shadow-none shadow hover:shadow-none mx-auto p-2 text-center">3</button>
+                    <button
+                        class="w-full h-12 inline-flex justify-center items-center border rounded-lg drop-shadow-md active:drop-shadow-none shadow hover:shadow-none mx-auto p-2 text-xl text-center">-</button>
+                    <button
+                        class="w-full h-12 inline-flex justify-center items-center border rounded-lg drop-shadow-md active:drop-shadow-none shadow hover:shadow-none mx-auto p-2 text-center">0</button>
+                    <button
+                        class="w-full h-12 inline-flex justify-center items-center border rounded-lg drop-shadow-md active:drop-shadow-none shadow hover:shadow-none mx-auto p-2 text-xl text-center">.</button>
+                    <button
+                        class="w-full h-12 inline-flex justify-center items-center border rounded-lg drop-shadow-md active:drop-shadow-none shadow hover:shadow-none mx-auto p-2 text-2xl text-center bg-emerald-100/50 col-span-2">=</button>
+                </div>
+            </div>
+            <div class="card-footer"></div>
+        </div>
+    </main>
+    <script type="module">
+        import { Calculator } from "./calculator.js";
+
+        window.onload = function () {
+            const calc = new Calculator();
+            document.querySelectorAll('.actions button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const calculateResult = document.querySelector('#calculate-result');
+                    if (!['AC', 'C', '√', '='].includes(btn.textContent)) {
+                        if (calculateResult.textContent.trim() !== '0') calculateResult.textContent += btn.textContent;
+                        else if (!['+', '-', '*', '/', '%'].includes(btn.textContent)) calculateResult.textContent = btn.textContent;
+                        calc.append(btn.textContent);
+                    } else if (btn.textContent.includes('=')) {
+                        calc.evaluate();
+                        calculateResult.textContent = calc.result;
+                    } else if (btn.textContent.includes('AC')) {
+                        calc.clearAllField();
+                        calculateResult.textContent = calc.result;
+                    } else if (btn.textContent.includes('C')) {
+                        calc.clearField();
+                        const text = calculateResult.textContent.trim();
+                        calculateResult.textContent = text.substring(0, text.length - 1);
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+
+</html>

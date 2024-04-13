@@ -1,0 +1,22 @@
+{
+  "name": "javascript-exercises",
+  "version": "1.0.0",
+  "description": "Basic javascript exercises",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amlan18041996/javascript-exercises.git"
+  },
+  "author": "Amlan Sengupta",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/amlan18041996/javascript-exercises/issues"
+  },
+  "homepage": "https://github.com/amlan18041996/javascript-exercises#readme",
+  "devDependencies": {
+    "tailwindcss": "^3.4.3"
+  }
+}
