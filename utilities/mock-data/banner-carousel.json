@@ -1,0 +1,32 @@
+[
+    {
+        "id": "870",
+        "image": "https://picsum.photos/id/870/800/300",
+        "uuid": "dummy-image-870"
+    },
+    {
+        "id": "120",
+        "image": "https://picsum.photos/id/120/800/300",
+        "uuid": "dummy-image-120"
+    },
+    {
+        "id": "350",
+        "image": "https://picsum.photos/id/350/800/300",
+        "uuid": "dummy-image-350"
+    },
+    {
+        "id": "460",
+        "image": "https://picsum.photos/id/460/800/300",
+        "uuid": "dummy-image-460"
+    },
+    {
+        "id": "110",
+        "image": "https://picsum.photos/id/110/800/300",
+        "uuid": "dummy-image-110"
+    },
+    {
+        "id": "290",
+        "image": "https://picsum.photos/id/290/800/300",
+        "uuid": "dummy-image-290"
+    }
+]

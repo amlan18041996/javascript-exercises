@@ -1,4 +1,4 @@
-export const calculatorActions = [
+[
     {
         "name": "AC",
         "description": "Clear all current data-history",
@@ -92,6 +92,7 @@ export const calculatorActions = [
     {
         "name": "=",
         "description": "",
-        "value": "result"
+        "value": "result",
+        "class": "col-span-2"
     }
-];
+]

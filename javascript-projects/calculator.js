@@ -1,4 +1,4 @@
-import { calculatorActions } from "../utils/mock-data.js";
+import calculatorActions from '../utilities/mock-data/calculator-actions.json' assert {type: 'json'};
 
 export function Calculator() {
     let calculate = [];
