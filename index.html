@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculator</title>
+    <title>Basic Exercises</title>
     <link rel="stylesheet" href="../output.css">
 </head>
 
@@ -303,12 +303,12 @@
             <div class="card">
                 <h2 class="w-auto text-4xl font-semibold tracking-wide mb-6">StopWatch</h2>
                 <div class="card-body p-4 flex flex-col gap-4 border shadow rounded bg-white">
-                    <span id="stopwatch-output"></span>
-                    <div class="flex flex-row gap-4">
-                        <button class="btn primary" type="button" id="start">Start</button>
-                        <button class="btn primary" type="button" id="pause">Pause</button>
-                        <button class="btn primary" type="button" id="stop">stop</button>
-                        <button class="btn primary" type="button" id="reset">Reset</button>
+                    <span id="stopwatch-output" class="text-2xl text-center"></span>
+                    <div class="flex flex-row justify-between gap-4">
+                        <button class="btn primary disabled:opacity-75" type="button" id="start">Start</button>
+                        <button class="btn primary disabled:opacity-75" type="button" id="pause">Pause</button>
+                        <button class="btn primary disabled:opacity-75" type="button" id="stop">Stop</button>
+                        <button class="btn primary disabled:opacity-75" type="button" id="reset">Reset</button>
                     </div>
                 </div>
             </div>
@@ -317,8 +317,9 @@
                 <h2 class="w-auto text-4xl font-semibold tracking-wide mb-6">Timer</h2>
                 <div class="card-body p-4 flex flex-col gap-4 border shadow rounded bg-white">
                     <form id="startCountdown" class="flex flex-col gap-4">
-                        <input type="number" id="timeInSeconds" class="form-element" />
-                        <span id="timer-output"></span>
+                        <input type="number" placeholder="Write in seconds..." id="timeInSeconds"
+                            class="form-element" />
+                        <span id="timer-output" class="text-2xl text-center"></span>
                         <button type="submit" class="btn primary">Start</button>
                     </form>
                 </div>
@@ -327,12 +328,11 @@
             <div class="card">
                 <h2 class="w-auto text-4xl font-semibold tracking-wide mb-6">Guess the Word</h2>
                 <div class="card-body p-4 flex flex-col gap-4 border shadow rounded bg-white">
-                    <span id="stopwatch-output"></span>
-                    <div class="flex flex-row gap-4">
-                        <button class="btn primary" type="button" id="start">Start</button>
-                        <button class="btn primary" type="button" id="pause">Pause</button>
-                        <button class="btn primary" type="button" id="stop">stop</button>
-                        <button class="btn primary" type="button" id="reset">Reset</button>
+                    <div id="guess-word-alphabets" class="flex gap-x-2"></div>
+                    <div id="guess-word-results" class="text-base font-medium text-center"></div>
+                    <div class="flex flex-row justify-around gap-4">
+                        <button class="btn primary" type="button" id="start-guess-word-game">Start Game</button>
+                        <button class="btn primary" type="button" id="guess-word">Guess Word</button>
                     </div>
                 </div>
             </div>

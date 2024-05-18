@@ -32,7 +32,7 @@ export default function Timer(output, timeInSeconds) {
 
     const calculateTime = function () {
         const totalMinutes = Math.floor(timeInSeconds / 60);
-        const seconds = timeInSeconds % 60;
+        const seconds = (timeInSeconds % 60) === 0 ? 59 : (timeInSeconds % 60);
         const hours = Math.floor(totalMinutes / 60);
         const minutes = totalMinutes % 60;
         timeValues.hours = hours;
@@ -45,6 +45,10 @@ export default function Timer(output, timeInSeconds) {
         timeValues.minutes = 0;
         timeValues.seconds = 0;
         output.innerText = "00 : 00 : 00";
+        if (interval) {
+            clearInterval(interval);
+            clearTimeout(interval);
+        }
     }
 
     this.start = function () {

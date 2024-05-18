@@ -5,6 +5,7 @@ import Toast from "./javascript-projects/toast.js";
 import { decorateTag, scrollToTop } from "./utilities/helpers.js";
 import Stopwatch from "./javascript-projects/stopwatch.js";
 import Timer from "./javascript-projects/timer.js";
+import GuessWord from "./javascript-projects/guess-word.js";
 
 function initiateBanner(wrapperEl) {
     const container = document.querySelector(wrapperEl);
@@ -109,6 +110,10 @@ window.onload = function () {
             count.start();
         }
     });
+
+    const guessWord = new GuessWord('#guess-word-alphabets', '#guess-word-results');
+    document.querySelector('#start-guess-word-game').addEventListener('click', () => guessWord.startGame());
+    document.querySelector('#guess-word').addEventListener('click', () => guessWord.makeGuess());
 
     function initializeAll() {
         initializeCalculator();
