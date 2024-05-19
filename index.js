@@ -6,6 +6,7 @@ import { decorateTag, scrollToTop } from "./utilities/helpers.js";
 import Stopwatch from "./javascript-projects/stopwatch.js";
 import Timer from "./javascript-projects/timer.js";
 import GuessWord from "./javascript-projects/guess-word.js";
+import { img } from "./utilities/dom-builder.js";
 
 function initiateBanner(wrapperEl) {
     const container = document.querySelector(wrapperEl);
@@ -114,6 +115,39 @@ window.onload = function () {
     const guessWord = new GuessWord('#guess-word-alphabets', '#guess-word-results');
     document.querySelector('#start-guess-word-game').addEventListener('click', () => guessWord.startGame());
     document.querySelector('#guess-word').addEventListener('click', () => guessWord.makeGuess());
+
+    document.querySelectorAll('.rock-paper-scissor button').forEach(gameEl => {
+        gameEl.addEventListener('click', (el) => {
+            let element;
+            if (el.target.localName === 'img') element = el.target.parentElement;
+            else element = el.target;
+            document.querySelector('#rps-display').innerHTML = '';
+            const gameParams = [
+                { value: 'rock', beats: 'scissors' },
+                { value: 'paper', beats: 'rock' },
+                { value: 'scissors', beats: 'paper' }
+            ];
+            const gameParamIndex = gameParams.findIndex(par => element.id === par.value)
+            const randomNumber = Math.floor(Math.random() * gameParams.length);
+            if (element.id.includes(gameParams[randomNumber].value)) {
+                document.querySelector('#rps-result').innerHTML = 'DRAW';
+            } else if (gameParams[randomNumber].beats === element.id) {
+                document.querySelector('#rps-result').innerHTML = 'You LOSE';
+            } else if (gameParams[randomNumber].value === gameParams[gameParamIndex]?.beats) {
+                document.querySelector('#rps-result').innerHTML = 'You WIN';
+            }
+            document.querySelector('#rps-display').append(img({
+                class: 'w-8 h-8',
+                alt: element.children[0].alt,
+                src: element.children[0].src
+            }));
+            document.querySelector('#rps-display').append(img({
+                class: 'w-8 h-8',
+                alt: `hand-${gameParams[randomNumber].value}`,
+                src: `./utilities/images/hand-${gameParams[randomNumber].value}.png`
+            }));
+        });
+    });
 
     function initializeAll() {
         initializeCalculator();
