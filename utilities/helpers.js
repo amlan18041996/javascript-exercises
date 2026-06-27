@@ -48,7 +48,7 @@ export function decorateTag(callback) {
     const allTags = document.querySelectorAll('*[x-for]');
     allTags.forEach(element => {
         const attrValue = element.getAttribute('x-for');
-        fetch(`${window.location.origin}/${attrValue}`)
+                fetch(attrValue)
             .then(response => {
                 return response.json();
             })

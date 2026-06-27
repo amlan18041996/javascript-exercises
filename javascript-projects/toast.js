@@ -7,9 +7,14 @@ const DEFAULT_OPTIONS = {
     canClose: true,
     showProgress: true,
     width: '300px',
+    duration: 5,
+    stacked: true,
 };
 
 export default function Toast(options) {
+    let resolvePromise = null;
+    this.promise = new Promise(resolve => { resolvePromise = resolve; });
+
     const createContainer = function (position) {
         const container = div({ class: 'toast-container' });
         container.dataset.position = position;
@@ -17,8 +22,12 @@ export default function Toast(options) {
         return container;
     };
 
-    function update(options) {
-        Object.entries(options).forEach(([key, value]) => (checker[key] = value));
+    function update(opts) {
+        if ('stacked' in opts) checker.stacked = opts.stacked;
+        if ('position' in opts) checker.position = opts.position;
+        Object.entries(opts).forEach(([key, value]) => {
+            if (key !== 'stacked' && key !== 'position') checker[key] = value;
+        });
     }
 
     const checker = {
@@ -41,19 +50,21 @@ export default function Toast(options) {
             this.toastElem.classList.remove('show');
             this.toastElem.addEventListener('transitionend', () => {
                 this.toastElem.remove();
-                if (container.hasChildNodes()) return;
-                container.remove();
+                if (container && !container.hasChildNodes()) {
+                    container.remove();
+                }
             });
             this.onClose();
+            if (resolvePromise) resolvePromise();
         },
         set width(value) {
             const container = document.querySelector(`.toast-container`);
-            container.style.setProperty('--width', value);
+            if (container) container.style.setProperty('--width', value);
         },
         set autoClose(value) {
             this.timeVisible = 0;
             this.autoCloseValue = value;
-            if (value === false) return;
+            if (value === false || value === 0) return;
             let lastTime;
             const func = (time) => {
                 if (this.shouldUnPause) {
@@ -72,7 +83,6 @@ export default function Toast(options) {
                         return;
                     }
                 }
-
                 lastTime = time;
                 this.autoCloseInterval = requestAnimationFrame(func);
             };
@@ -81,11 +91,15 @@ export default function Toast(options) {
         set position(value) {
             const currentContainer = this.toastElem.parentElement;
             const selector = `.toast-container[data-position="${value}"]`;
-            const container =
-                document.querySelector(selector) || createContainer(value);
+            let container = document.querySelector(selector);
+            if (container && !checker.stacked) {
+                container.innerHTML = '';
+            }
+            if (!container) container = createContainer(value);
             container.append(this.toastElem);
-            if (currentContainer == null || currentContainer.hasChildNodes()) return;
-            currentContainer.remove();
+            if (currentContainer && !currentContainer.hasChildNodes()) {
+                currentContainer.remove();
+            }
         },
         set text(value) {
             this.toastElem.children[0].append(value);
@@ -128,9 +142,21 @@ export default function Toast(options) {
             else
                 document.removeEventListener('visibilitychange', this.visibilityChange);
         },
+        set duration(value) {
+            if (value === 0) {
+                this.autoClose = false;
+            } else {
+                this.autoClose = Math.min(value, 15) * 1000;
+            }
+        },
+        set stacked(value) {
+            if (!value) {
+                const container = this.toastElem.parentElement;
+                if (container) container.innerHTML = '';
+            }
+        },
     };
 
-    console.log('Toast Initiated');
     const closeBtn = button({
         type: 'button',
         class: 'w-6 h-6 inline-flex items-center justify-center ms-auto -mx-1.5 -my-1.5 p-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 hover:bg-gray-100'

@@ -1,0 +1,18 @@
+{
+  "name": "json-schema-validator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Runtime JSON validator using TypeScript conditional, recursive, and branded types",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/examples.ts",
+    "start": "tsx src/examples.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.1",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0"
+  }
+}

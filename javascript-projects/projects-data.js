@@ -1,0 +1,92 @@
+export const projects = [
+    {
+        id: 'calculator',
+        title: 'Calculator',
+        description: 'A fully functional calculator supporting basic arithmetic operations — addition, subtraction, multiplication, division, and modulo. Features keyboard input, Enter/evaluate, ESC/clear, Backspace, and calculation history (last 10).',
+        concepts: ['DOM Manipulation', 'Event Handling', 'Array Methods', 'CSS Grid', 'Keyboard Events'],
+        color: '#6366f1',
+        file: 'calculator.js',
+    },
+    {
+        id: 'carousel',
+        title: 'Image Carousel',
+        description: 'An auto-playing image carousel with infinite scroll, drag-to-swipe support, prev/next navigation, and pagination indicators. Features configurable duration, auto-play toggle, and pause-on-hover.',
+        concepts: ['DOM Manipulation', 'Event Handling', 'Timers', 'Debounce', 'Infinite Scroll'],
+        color: '#06b6d4',
+        file: 'carousel.js',
+    },
+    {
+        id: 'toast',
+        title: 'Toast Notification',
+        description: 'A customizable toast notification system with multiple positions, configurable duration (0 = stays, max 15s), stacked/non-stacked mode, pause-on-hover, pause-on-focus-loss, and promise-based chaining.',
+        concepts: ['DOM Manipulation', 'CSS Animations', 'Event Handling', 'requestAnimationFrame', 'Promises'],
+        color: '#f59e0b',
+        file: 'toast.js',
+    },
+    {
+        id: 'two-way-data-bind',
+        title: 'Two-Way Data Binding',
+        description: 'A lightweight data-binding engine that syncs a JavaScript object with DOM elements. Features two synchronized input fields for testing bidirectional updates.',
+        concepts: ['Proxies', 'Data Binding', 'Custom Events', 'Observer Pattern'],
+        color: '#10b981',
+        file: 'two-way-data-bind.js',
+    },
+    {
+        id: 'stopwatch',
+        title: 'Stopwatch',
+        description: 'A precision stopwatch with start, pause, stop, and reset controls. Uses requestAnimationFrame for smooth, accurate time display with millisecond precision.',
+        concepts: ['Timers', 'requestAnimationFrame', 'State Management', 'Event Handling'],
+        color: '#ec4899',
+        file: 'stopwatch.js',
+    },
+    {
+        id: 'timer',
+        title: 'Countdown Timer',
+        description: 'A countdown timer with animated SVG clock face, dynamic color changes (info → warning → danger), beep sound on expiry, and shake animation.',
+        concepts: ['Timers', 'Form Handling', 'DOM Manipulation', 'SVG Animation', 'Web Audio API'],
+        color: '#8b5cf6',
+        file: 'timer.js',
+    },
+    {
+        id: 'guess-word',
+        title: 'Guess the Word',
+        description: 'A word guessing game that fetches random words from an AI dictionary API with real definitions. Features progressive hints per wrong guess, auto-advancing single-character inputs, toast notifications, and red-highlighted missing letters on game over.',
+        concepts: ['Game Logic', 'DOM Manipulation', 'Fetch API', 'Dynamic Hints', 'Toast Integration'],
+        color: '#ef4444',
+        file: 'guess-word.js',
+    },
+    {
+        id: 'rock-paper-scissors',
+        title: 'Rock Paper Scissors',
+        description: 'Rock Paper Scissors with animated rolling choices, countdown timer, win/loss tracking, a "How to Play" guide, 10-loss game-over threshold, auto-resume after 5s, and toast notifications.',
+        concepts: ['Game Logic', 'Randomization', 'DOM Manipulation', 'Event Handling', 'Timers', 'Toast Integration'],
+        color: '#14b8a6',
+        file: 'rock-paper-scissors.js',
+        instructions: '<strong>How to Play?</strong><ul><li>Click Start Game to begin a session</li><li>Choose ✊ Rock, ✋ Paper, or ✌️ Scissors before the timer runs out</li><li>✊ Rock beats ✌️ Scissors</li><li>✋ Paper beats ✊ Rock</li><li>✌️ Scissors beats ✋ Paper</li><li>Game ends after 10 losses</li><li>Rounds auto-play every 5 seconds</li></ul>',
+    },
+    {
+        id: 'http-client',
+        title: 'HTTP Client with Interceptors',
+        description: 'A fetch-based HTTP client featuring request/response interceptors, automatic retry with exponential backoff, configurable timeout, and request cancellation via AbortController.',
+        concepts: ['Fetch API', 'Interceptors', 'Retry Logic', 'AbortController', 'Error Handling'],
+        color: '#f97316',
+        file: 'http-client.js',
+    },
+    {
+        id: 'state-manager',
+        title: 'Reactive State Manager',
+        description: 'A mini state management library using ES6 Proxy and Reflect. Supports deep reactive state, subscriptions, derived selectors with auto-recompute, and a Redux-style middleware chain.',
+        concepts: ['Proxy', 'Reflect', 'State Management', 'Middleware', 'Observer Pattern', 'Derived State'],
+        color: '#6366f1',
+        file: 'state-manager.js',
+    },
+];
+
+export const stats = {
+    projectsDelivered: projects.length,
+    conceptsCovered: [...new Set(projects.flatMap(p => p.concepts))].length,
+    conceptsInProgress: 3,
+    upcomingConcepts: 5,
+};
+
+export const allConcepts = [...new Set(projects.flatMap(p => p.concepts))];

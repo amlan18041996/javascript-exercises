@@ -8,6 +8,7 @@ export default function Carousel({
     onChange,
     delay = 5000,
     isAutoPlay = true,
+    pauseOnHover = true,
 }) {
     const wrapper = document.querySelector(wrapperEl);
 
@@ -41,20 +42,18 @@ export default function Carousel({
         });
         // Add event listeners for the arrow buttons to scroll the carousel left and right
         document.querySelector(previousElAction)?.addEventListener('click', () => {
-            const value = firstCardWidth;
-            carousel.scrollLeft += -value;
-            if (onChange)
-                onChange(
-                    carousel.children[Math.floor(carousel.scrollLeft / value) + 1]
-                );
+            carousel.scrollLeft += -firstCardWidth;
+            if (onChange) {
+                const idx = Math.floor(carousel.scrollLeft / firstCardWidth);
+                onChange({ target: carousel.children[idx]?.dataset?.carouselItem });
+            }
         });
         document.querySelector(nextElAction)?.addEventListener('click', () => {
-            const value = firstCardWidth;
-            carousel.scrollLeft += value;
-            if (onChange)
-                onChange(
-                    carousel.children[Math.floor(carousel.scrollLeft / value) + 1]
-                );
+            carousel.scrollLeft += firstCardWidth;
+            if (onChange) {
+                const idx = Math.floor(carousel.scrollLeft / firstCardWidth);
+                onChange({ target: carousel.children[idx]?.dataset?.carouselItem });
+            }
         });
         const dragStart = (e) => {
             isDragging = true;
@@ -98,7 +97,7 @@ export default function Carousel({
             }
             // Clear existing timeout & start autoplay if mouse is not hovering over carousel
             clearTimeout(timeoutId);
-            if (wrapper && !wrapper.matches(':hover') && isAutoPlay) {
+            if (wrapper && isAutoPlay && (!pauseOnHover || !wrapper.matches(':hover'))) {
                 if (onChange) {
                     const target = Math.floor(carousel.scrollLeft / firstCardWidth);
                     onChange({ target: carousel.children[target]?.dataset?.carouselItem });
@@ -111,8 +110,8 @@ export default function Carousel({
         carousel.addEventListener('mousemove', dragging);
         document.addEventListener('mouseup', dragStop);
         carousel.addEventListener('scroll', infiniteScroll);
-        if (isAutoPlay)
+        if (isAutoPlay && pauseOnHover)
             wrapper.addEventListener('mouseenter', () => clearTimeout(timeoutId));
-        if (isAutoPlay) wrapper.addEventListener('mouseleave', autoPlay);
+        if (isAutoPlay && pauseOnHover) wrapper.addEventListener('mouseleave', autoPlay);
     }
 }
