@@ -1,6 +1,6 @@
-# JavaScript Exercises
+# Vanilla Forge
 
-A curated collection of vanilla JavaScript projects built with modern ES6+ features, design patterns, and browser APIs. No frameworks, no libraries — just pure HTML, CSS, and JavaScript.
+A curated collection of vanilla JavaScript and TypeScript projects built with modern ES6+ features, design patterns, and browser APIs. No frameworks, no libraries — just pure HTML, CSS, JavaScript, and TypeScript.
 
 ## Features
 
@@ -65,7 +65,7 @@ npm run preview
 ## Project Structure
 
 ```
-javascript-exercises/
+vanilla-forge/
 ├── index.html              # SPA shell with all page sections
 ├── index.js                # App entry — routing, navigation, demo orchestration
 ├── styles/
