@@ -3,6 +3,9 @@ import TwoWayBind from "./two-way-data-bind.js";
 import Toast from "./toast.js";
 import Stopwatch from "./stopwatch.js";
 import { initMiniPrismaDemo } from "./mini-prisma-demo.js";
+import Timer from "./timer.js";
+import GuessWord from "./guess-word.js";
+import RockPaperScissors from "./rock-paper-scissors.js";
 
 const demos = {};
 
@@ -226,7 +229,7 @@ demos.timer = {
         const progress = container.querySelector('#clock-progress-demo');
         const minuteHand = container.querySelector('#clock-minute-demo');
         const secondHand = container.querySelector('#clock-second-demo');
-        let interval = null;
+        let timerInstance = null;
         let shakeTimeout = null;
         let total = 0;
 
@@ -246,11 +249,8 @@ demos.timer = {
             } catch (e) { /* audio not supported */ }
         }
 
-        function pad(n) { return n > 9 ? String(n) : '0' + n; }
-
-        function setColorClass(elapsed) {
-            const remaining = total - elapsed;
-            const fraction = total > 0 ? remaining / total : 0;
+        function setColorClass(remaining, totalSecs) {
+            const fraction = totalSecs > 0 ? remaining / totalSecs : 0;
             if (fraction > 0.5) {
                 progress.style.stroke = '#10b981';
                 output.style.color = '#10b981';
@@ -263,19 +263,14 @@ demos.timer = {
             }
         }
 
-        function update(totalSecs, elapsed) {
-            const remaining = Math.max(0, totalSecs - elapsed);
+        function updateUI(hours, mins, secs, remaining, totalSecs) {
             const fraction = totalSecs > 0 ? remaining / totalSecs : 0;
             progress.style.strokeDashoffset = 282.74 * (1 - fraction);
-            const hours = Math.floor(remaining / 3600);
-            const mins = Math.floor((remaining % 3600) / 60);
-            const secs = Math.floor(remaining % 60);
-            output.textContent = `${pad(hours)} : ${pad(mins)} : ${pad(secs)}`;
             const minuteDeg = (mins / 60) * 360;
             const secondDeg = (secs / 60) * 360;
             minuteHand.style.transform = `rotate(${minuteDeg}deg)`;
             secondHand.style.transform = `rotate(${secondDeg}deg)`;
-            setColorClass(elapsed);
+            setColorClass(remaining, totalSecs);
         }
 
         function stopShake() {
@@ -289,22 +284,22 @@ demos.timer = {
             const input = container.querySelector('#timer-input-demo');
             if (!input.valueAsNumber) return;
             stopShake();
-            if (interval) { clearInterval(interval); interval = null; }
             total = input.valueAsNumber;
             output.style.color = '';
-            let elapsed = 0;
-            update(total, elapsed);
-            interval = setInterval(() => {
-                elapsed++;
-                update(total, elapsed);
-                if (elapsed >= total) {
-                    clearInterval(interval);
-                    interval = null;
+            output.textContent = '00 : 00 : 00';
+            timerInstance = new Timer(output, total, {
+                onTick(hours, minutes, seconds) {
+                    const elapsed = total - (hours * 3600 + minutes * 60 + seconds);
+                    const remaining = total - elapsed;
+                    updateUI(hours, minutes, seconds, remaining, total);
+                },
+                onComplete() {
                     clockEl.classList.add('shaking');
                     playBeep();
                     shakeTimeout = setTimeout(stopShake, 5000);
-                }
-            }, 1000);
+                },
+            });
+            timerInstance.start();
         });
     },
 };
@@ -334,6 +329,7 @@ demos['guess-word'] = {
         let guessCount = 0;
         let totalTries = 10;
         let isFetching = false;
+        let guessWordEngine = null;
 
         const startBtn = container.querySelector('#start-guess-game-demo');
         const guessBtn = container.querySelector('#guess-word-demo');
@@ -473,6 +469,9 @@ demos['guess-word'] = {
             return false;
         }
 
+        guessWordEngine = new GuessWord('#guess-word-alphabets-demo', '#guess-word-results-demo');
+        const guessWordCheck = guessWordEngine.checkGuess.bind(guessWordEngine);
+
         startBtn.addEventListener('click', async () => {
             if (isFetching) return;
             isFetching = true;
@@ -495,6 +494,7 @@ demos['guess-word'] = {
         guessBtn.addEventListener('click', () => {
             if (!gameActive || !currentWord) return;
             const guessed = getGuessedWord().toLowerCase();
+            guessWordCheck(guessed);
             if (guessed === currentWord.word) {
                 checkGameOver();
                 return;
@@ -545,136 +545,7 @@ demos['rock-paper-scissors'] = {
         </div>
     `,
     init(container) {
-        const rps = ['rock', 'paper', 'scissors'];
-        const emojis = { rock: '✊', paper: '✋', scissors: '✌️' };
-        const beats = { rock: 'scissors', paper: 'rock', scissors: 'paper' };
-
-        const startBtn = container.querySelector('#rps-start-demo');
-        const options = container.querySelector('#rps-options-demo');
-        const timerEl = container.querySelector('#rps-timer-demo');
-        const playerBox = container.querySelector('#rps-player-choice-demo');
-        const botBox = container.querySelector('#rps-bot-choice-demo');
-        const scoreEl = container.querySelector('#rps-score-demo');
-        const winEl = container.querySelector('#rps-win-count-demo');
-        const lossEl = container.querySelector('#rps-loss-count-demo');
-        const totalEl = container.querySelector('#rps-total-demo');
-
-        let roundActive = false;
-        let userChoice = null;
-        let autoPlayTimer = null;
-        let wins = 0;
-        let losses = 0;
-        let totalGames = 0;
-        const ROUND_SECONDS = 3;
-        const AUTO_RESUME_SECONDS = 5;
-
-        function showToastMsg(text, dur) {
-            new Toast({ text, position: 'bottom-center', duration: dur || 5, stacked: false, pauseOnHover: true });
-        }
-
-        function updateScore() {
-            winEl.textContent = wins;
-            lossEl.textContent = losses;
-            totalEl.textContent = totalGames;
-        }
-
-        function showFinalChoices(pChoice, bChoice) {
-            playerBox.textContent = emojis[pChoice];
-            botBox.textContent = emojis[bChoice];
-        }
-
-        function resetDisplay() {
-            userChoice = null;
-            options.style.display = 'flex';
-            options.querySelectorAll('button').forEach(b => b.disabled = false);
-            timerEl.textContent = String(ROUND_SECONDS);
-            timerEl.className = 'rps-timer';
-            playerBox.textContent = '?';
-            botBox.textContent = '?';
-        }
-
-        function endSession() {
-            roundActive = false;
-            if (autoPlayTimer) { clearTimeout(autoPlayTimer); autoPlayTimer = null; }
-            startBtn.style.display = 'inline-block';
-            options.style.display = 'none';
-            options.querySelectorAll('button').forEach(b => b.disabled = false);
-            timerEl.textContent = 'VS';
-            timerEl.className = 'rps-timer';
-            playerBox.textContent = '🤔';
-            botBox.textContent = '🤖';
-        }
-
-        function playRound() {
-            if (!roundActive) return;
-            resetDisplay();
-
-            const botChoice = rps[Math.floor(Math.random() * 3)];
-            let elapsed = 0;
-            let count = ROUND_SECONDS;
-
-            const tick = setInterval(() => {
-                elapsed += 0.1;
-                if (elapsed < ROUND_SECONDS) {
-                    playerBox.textContent = emojis[rps[Math.floor(Math.random() * 3)]];
-                    botBox.textContent = emojis[rps[Math.floor(Math.random() * 3)]];
-                    const newCount = ROUND_SECONDS - Math.ceil(elapsed);
-                    if (newCount !== count && newCount > 0) {
-                        count = newCount;
-                        timerEl.textContent = count;
-                    }
-                } else {
-                    clearInterval(tick);
-                    const pChoice = userChoice || rps[Math.floor(Math.random() * 3)];
-                    showFinalChoices(pChoice, botChoice);
-                    timerEl.textContent = '';
-                    totalGames++;
-
-                    if (pChoice === botChoice) {
-                        showToastMsg('Draw! 🤝', 3);
-                    } else if (beats[pChoice] === botChoice) {
-                        wins++;
-                        showToastMsg('You Win! 🎉', 4);
-                    } else {
-                        losses++;
-                        showToastMsg('You Lose! 😞', 3);
-                    }
-
-                    updateScore();
-                    scoreEl.style.display = 'block';
-
-                    if (losses >= 10) {
-                        showToastMsg(`Game Over! You lost 10 times. Final: ${wins}W - ${losses}L`, 8);
-                        wins = 0;
-                        losses = 0;
-                        totalGames = 0;
-                        updateScore();
-                        endSession();
-                    } else {
-                        autoPlayTimer = setTimeout(playRound, AUTO_RESUME_SECONDS * 1000);
-                    }
-                }
-            }, 100);
-        }
-
-        options.addEventListener('click', (e) => {
-            const btn = e.target.closest('button[data-rps]');
-            if (!btn || !roundActive || userChoice) return;
-            userChoice = btn.dataset.rps;
-            options.querySelectorAll('button').forEach(b => b.disabled = true);
-        });
-
-        startBtn.addEventListener('click', () => {
-            if (roundActive) return;
-            roundActive = true;
-            startBtn.style.display = 'none';
-            wins = 0;
-            losses = 0;
-            totalGames = 0;
-            updateScore();
-            scoreEl.style.display = 'none';
-            playRound();
-        });
+        new RockPaperScissors(container);
     },
 };
 

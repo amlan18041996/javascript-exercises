@@ -1,15 +1,30 @@
+@tailwind base;
+@tailwind utilities;
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
     --primary: #6366f1;
-    --primary-light: #818cf8;
-    --primary-dark: #4f46e5;
+    --primary-hover: #4f46e5;
+    --secondary: #8b5cf6;
+    --secondary-hover: #7c3aed;
+    --info: #38bdf8;
+    --info-hover: #0ea5e9;
+    --success: #34d399;
+    --success-hover: #10b981;
+    --warning: #fbbf24;
+    --warning-hover: #f59e0b;
+    --danger: #f87171;
+    --danger-hover: #ef4444;
+    --muted: #94a3b8;
+    --muted-hover: #64748b;
     --accent: #06b6d4;
     --bg: #f8fafc;
     --bg-card: #ffffff;
     --text: #1e293b;
     --text-muted: #64748b;
     --border: #e2e8f0;
+    --border-light: #d1d5db;
     --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
     --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
     --radius: 12px;
@@ -1216,4 +1231,99 @@ footer .copyright {
     font-size: 0.875rem;
     text-align: center;
     padding: 1.5rem;
+}
+
+/* ===== COMPONENTS ===== */
+.btn {
+    display: inline-flex;
+    cursor: pointer;
+    user-select: none;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    border-radius: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    text-align: center;
+    font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    font-size: 1rem;
+    line-height: 1.5rem;
+    font-weight: 500;
+    letter-spacing: 0.025em;
+    color: white;
+    text-decoration: none;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    transition: all 0.3s;
+    border: none;
+}
+
+.btn:hover {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.625rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+.btn.primary { background: var(--primary); }
+.btn.primary:hover { background: var(--primary-hover); }
+
+.btn.secondary { background: var(--secondary); }
+.btn.secondary:hover { background: var(--secondary-hover); }
+
+.btn.info { background: var(--info); color: #1e293b; }
+.btn.info:hover { background: var(--info-hover); }
+
+.btn.success { background: var(--success); color: #1e293b; }
+.btn.success:hover { background: var(--success-hover); }
+
+.btn.warning { background: var(--warning); color: #1e293b; }
+.btn.warning:hover { background: var(--warning-hover); }
+
+.btn.danger { background: var(--danger); }
+.btn.danger:hover { background: var(--danger-hover); }
+
+.btn.muted { background: var(--muted); color: #1e293b; }
+.btn.muted:hover { background: var(--muted-hover); }
+
+.form-element {
+    display: block;
+    width: 100%;
+    border-radius: 0.25rem;
+    border: 1px solid var(--border-light);
+    background: #f9fafb;
+    padding: 0.5rem;
+    font-weight: 400;
+    letter-spacing: 0.025em;
+    color: #4b5563;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    transition: all 0.3s;
+}
+
+.form-element:focus {
+    outline: none;
+    border-color: #9ca3af;
+    box-shadow: 0 0 0 2px rgb(99 102 241 / 0.15);
+}
+
+.form-element::placeholder {
+    color: #9ca3af;
+}
+
+select.form-element {
+    appearance: auto;
+}
+
+textarea.form-element {
+    font-family: ui-monospace, 'Cascadia Code', 'SF Mono', monospace;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    resize: vertical;
+    tab-size: 2;
 }
