@@ -20,6 +20,28 @@ export const tsProjects = [
   <li><code>nullable(inner)</code> — allows null values</li>
 </ul>`,
     },
+    {
+        id: 'mini-prisma',
+        title: 'Type-Safe ORM (Mini-Prisma)',
+        description: 'A tiny type-safe query builder for SQLite built with TypeScript. Features fluent interfaces with `this` typing for method chaining and conditional return types based on selected fields.',
+        concepts: ['Conditional Return Types', 'Fluent Interfaces with this Typing', 'Generic Constraints', 'Template Literal Types', 'Type-safe SQL'],
+        color: '#3178c6',
+        file: 'mini-prisma',
+        instructions: `<strong>Query Builder API</strong>
+<ul>
+  <li><code>selectFrom(table)</code> — start a SELECT query</li>
+  <li><code>.where(field, op, value)</code> — add a WHERE condition; returns <code>this</code> for chaining</li>
+  <li><code>.orWhere(field, op, value)</code> — add an OR WHERE condition</li>
+  <li><code>.select(...fields)</code> — narrow return type via conditional types (<code>Pick&lt;T, F&gt;</code>)</li>
+  <li><code>.orderBy(field, dir)</code> — add ORDER BY clause</li>
+  <li><code>.limit(n) / .offset(n)</code> — pagination</li>
+  <li><code>.first()</code> — return single result or undefined</li>
+  <li><code>.execute()</code> — build SQL and return typed results</li>
+  <li><code>insertInto(table).values(data).execute()</code> — INSERT</li>
+  <li><code>update(table).set(data).where(...).execute()</code> — UPDATE</li>
+  <li><code>deleteFrom(table).where(...).execute()</code> — DELETE</li>
+</ul>`,
+    },
 ];
 
 export const tsStats = {
