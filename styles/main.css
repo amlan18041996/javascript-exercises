@@ -1104,3 +1104,116 @@ footer .copyright {
         grid-template-columns: 1fr;
     }
 }
+
+/* ===== MINI-PRISMA DEMO ===== */
+.mp-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.mp-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.mp-desc {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.mp-sql-box {
+    background: #1e293b;
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+}
+
+.mp-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.375rem;
+}
+
+.mp-sql {
+    font-family: ui-monospace, 'Cascadia Code', 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+    font-size: 0.8125rem;
+    color: #e2e8f0;
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin: 0;
+}
+
+.mp-result-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.mp-timing {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.mp-result {
+    overflow-x: auto;
+}
+
+.mp-empty {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    text-align: center;
+    padding: 2rem;
+}
+
+.mp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+
+.mp-table th {
+    background: #f1f5f9;
+    font-weight: 600;
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+}
+
+.mp-table td {
+    padding: 0.375rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.mp-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.mp-null {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+.mp-number {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.mp-success {
+    color: #10b981;
+    font-size: 0.875rem;
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.mp-error {
+    color: #ef4444;
+    font-size: 0.875rem;
+    text-align: center;
+    padding: 1.5rem;
+}

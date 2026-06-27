@@ -22,5 +22,8 @@
   "devDependencies": {
     "tailwindcss": "^3.4.3",
     "vite": "^8.1.0"
+  },
+  "dependencies": {
+    "sql.js": "^1.14.1"
   }
 }

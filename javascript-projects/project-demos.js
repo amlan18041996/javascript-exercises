@@ -2,6 +2,7 @@ import { Calculator } from "./calculator.js";
 import TwoWayBind from "./two-way-data-bind.js";
 import Toast from "./toast.js";
 import Stopwatch from "./stopwatch.js";
+import { initMiniPrismaDemo } from "./mini-prisma-demo.js";
 
 const demos = {};
 
@@ -1102,6 +1103,13 @@ demos['json-schema-validator'] = {
         });
 
         container.querySelector('#tsv-validate').addEventListener('click', runValidation);
+    },
+};
+
+demos['mini-prisma'] = {
+    html: `<div id="mini-prisma-demo"><p class="text-gray-500 text-center py-8">Loading SQLite...</p></div>`,
+    async init(container) {
+        await initMiniPrismaDemo(container);
     },
 };
 
