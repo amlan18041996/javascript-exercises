@@ -1,9 +1,3 @@
-import { Calculator } from "./calculator.js";
-import TwoWayBind from "./two-way-data-bind.js";
-import Toast from "./toast.js";
-import Stopwatch from "./stopwatch.js";
-import { initMiniPrismaDemo } from "./mini-prisma-demo.js";
-
 const demos = {};
 
 demos.calculator = {
@@ -34,7 +28,8 @@ demos.calculator = {
             <div id="calc-history-demo" class="text-xs text-gray-500 mt-2 space-y-1"></div>
         </div>
     `,
-    init(container) {
+    async init(container) {
+        const { Calculator } = await import("./calculator.js");
         const calc = new Calculator();
         const result = container.querySelector('#calculate-result');
         const wrapper = container.querySelector('#calc-demo-wrapper');
@@ -127,7 +122,8 @@ demos.toast = {
             </div>
         </div>
     `,
-    init(container) {
+    async init(container) {
+        const Toast = (await import("./toast.js")).default;
         const durSlider = container.querySelector('#toast-duration-demo');
         const durValue = container.querySelector('#toast-duration-value-demo');
         durSlider.addEventListener('input', () => { durValue.textContent = durSlider.value; });
@@ -176,7 +172,8 @@ demos['two-way-data-bind'] = {
             <p class="text-lg font-normal" id="two-way-output-demo"></p>
         </div>
     `,
-    init(container) {
+    async init(container) {
+        const TwoWayBind = (await import("./two-way-data-bind.js")).default;
         let profile = { name: '' };
         let bind = new TwoWayBind({ object: profile, property: 'name' });
         bind.bindEl(container.querySelector('#two-way-input-demo'), 'value', 'keyup');
@@ -197,7 +194,10 @@ demos.stopwatch = {
             </div>
         </div>
     `,
-    init() { new Stopwatch(); },
+    async init() {
+        const Stopwatch = (await import("./stopwatch.js")).default;
+        new Stopwatch();
+    },
 };
 
 demos.timer = {
@@ -219,14 +219,15 @@ demos.timer = {
             </div>
         </div>
     `,
-    init(container) {
+    async init(container) {
+        const Timer = (await import("./timer.js")).default;
         const form = container.querySelector('#timer-form-demo');
         const output = container.querySelector('#timer-output-demo');
         const clockEl = container.querySelector('#timer-clock-demo');
         const progress = container.querySelector('#clock-progress-demo');
         const minuteHand = container.querySelector('#clock-minute-demo');
         const secondHand = container.querySelector('#clock-second-demo');
-        let interval = null;
+        let timerInstance = null;
         let shakeTimeout = null;
         let total = 0;
 
@@ -246,11 +247,8 @@ demos.timer = {
             } catch (e) { /* audio not supported */ }
         }
 
-        function pad(n) { return n > 9 ? String(n) : '0' + n; }
-
-        function setColorClass(elapsed) {
-            const remaining = total - elapsed;
-            const fraction = total > 0 ? remaining / total : 0;
+        function setColorClass(remaining, totalSecs) {
+            const fraction = totalSecs > 0 ? remaining / totalSecs : 0;
             if (fraction > 0.5) {
                 progress.style.stroke = '#10b981';
                 output.style.color = '#10b981';
@@ -263,19 +261,14 @@ demos.timer = {
             }
         }
 
-        function update(totalSecs, elapsed) {
-            const remaining = Math.max(0, totalSecs - elapsed);
+        function updateUI(hours, mins, secs, remaining, totalSecs) {
             const fraction = totalSecs > 0 ? remaining / totalSecs : 0;
             progress.style.strokeDashoffset = 282.74 * (1 - fraction);
-            const hours = Math.floor(remaining / 3600);
-            const mins = Math.floor((remaining % 3600) / 60);
-            const secs = Math.floor(remaining % 60);
-            output.textContent = `${pad(hours)} : ${pad(mins)} : ${pad(secs)}`;
             const minuteDeg = (mins / 60) * 360;
             const secondDeg = (secs / 60) * 360;
             minuteHand.style.transform = `rotate(${minuteDeg}deg)`;
             secondHand.style.transform = `rotate(${secondDeg}deg)`;
-            setColorClass(elapsed);
+            setColorClass(remaining, totalSecs);
         }
 
         function stopShake() {
@@ -289,22 +282,22 @@ demos.timer = {
             const input = container.querySelector('#timer-input-demo');
             if (!input.valueAsNumber) return;
             stopShake();
-            if (interval) { clearInterval(interval); interval = null; }
             total = input.valueAsNumber;
             output.style.color = '';
-            let elapsed = 0;
-            update(total, elapsed);
-            interval = setInterval(() => {
-                elapsed++;
-                update(total, elapsed);
-                if (elapsed >= total) {
-                    clearInterval(interval);
-                    interval = null;
+            output.textContent = '00 : 00 : 00';
+            timerInstance = new Timer(output, total, {
+                onTick(hours, minutes, seconds) {
+                    const elapsed = total - (hours * 3600 + minutes * 60 + seconds);
+                    const remaining = total - elapsed;
+                    updateUI(hours, minutes, seconds, remaining, total);
+                },
+                onComplete() {
                     clockEl.classList.add('shaking');
                     playBeep();
                     shakeTimeout = setTimeout(stopShake, 5000);
-                }
-            }, 1000);
+                },
+            });
+            timerInstance.start();
         });
     },
 };
@@ -328,12 +321,15 @@ demos['guess-word'] = {
             </div>
         </div>
     `,
-    init(container) {
+    async init(container) {
+        const Toast = (await import("./toast.js")).default;
+        const GuessWord = (await import("./guess-word.js")).default;
         let currentWord = null;
         let gameActive = false;
         let guessCount = 0;
         let totalTries = 10;
         let isFetching = false;
+        let guessWordEngine = null;
 
         const startBtn = container.querySelector('#start-guess-game-demo');
         const guessBtn = container.querySelector('#guess-word-demo');
@@ -473,6 +469,9 @@ demos['guess-word'] = {
             return false;
         }
 
+        guessWordEngine = new GuessWord('#guess-word-alphabets-demo', '#guess-word-results-demo');
+        const guessWordCheck = guessWordEngine.checkGuess.bind(guessWordEngine);
+
         startBtn.addEventListener('click', async () => {
             if (isFetching) return;
             isFetching = true;
@@ -495,6 +494,7 @@ demos['guess-word'] = {
         guessBtn.addEventListener('click', () => {
             if (!gameActive || !currentWord) return;
             const guessed = getGuessedWord().toLowerCase();
+            guessWordCheck(guessed);
             if (guessed === currentWord.word) {
                 checkGameOver();
                 return;
@@ -544,137 +544,9 @@ demos['rock-paper-scissors'] = {
             </div>
         </div>
     `,
-    init(container) {
-        const rps = ['rock', 'paper', 'scissors'];
-        const emojis = { rock: '✊', paper: '✋', scissors: '✌️' };
-        const beats = { rock: 'scissors', paper: 'rock', scissors: 'paper' };
-
-        const startBtn = container.querySelector('#rps-start-demo');
-        const options = container.querySelector('#rps-options-demo');
-        const timerEl = container.querySelector('#rps-timer-demo');
-        const playerBox = container.querySelector('#rps-player-choice-demo');
-        const botBox = container.querySelector('#rps-bot-choice-demo');
-        const scoreEl = container.querySelector('#rps-score-demo');
-        const winEl = container.querySelector('#rps-win-count-demo');
-        const lossEl = container.querySelector('#rps-loss-count-demo');
-        const totalEl = container.querySelector('#rps-total-demo');
-
-        let roundActive = false;
-        let userChoice = null;
-        let autoPlayTimer = null;
-        let wins = 0;
-        let losses = 0;
-        let totalGames = 0;
-        const ROUND_SECONDS = 3;
-        const AUTO_RESUME_SECONDS = 5;
-
-        function showToastMsg(text, dur) {
-            new Toast({ text, position: 'bottom-center', duration: dur || 5, stacked: false, pauseOnHover: true });
-        }
-
-        function updateScore() {
-            winEl.textContent = wins;
-            lossEl.textContent = losses;
-            totalEl.textContent = totalGames;
-        }
-
-        function showFinalChoices(pChoice, bChoice) {
-            playerBox.textContent = emojis[pChoice];
-            botBox.textContent = emojis[bChoice];
-        }
-
-        function resetDisplay() {
-            userChoice = null;
-            options.style.display = 'flex';
-            options.querySelectorAll('button').forEach(b => b.disabled = false);
-            timerEl.textContent = String(ROUND_SECONDS);
-            timerEl.className = 'rps-timer';
-            playerBox.textContent = '?';
-            botBox.textContent = '?';
-        }
-
-        function endSession() {
-            roundActive = false;
-            if (autoPlayTimer) { clearTimeout(autoPlayTimer); autoPlayTimer = null; }
-            startBtn.style.display = 'inline-block';
-            options.style.display = 'none';
-            options.querySelectorAll('button').forEach(b => b.disabled = false);
-            timerEl.textContent = 'VS';
-            timerEl.className = 'rps-timer';
-            playerBox.textContent = '🤔';
-            botBox.textContent = '🤖';
-        }
-
-        function playRound() {
-            if (!roundActive) return;
-            resetDisplay();
-
-            const botChoice = rps[Math.floor(Math.random() * 3)];
-            let elapsed = 0;
-            let count = ROUND_SECONDS;
-
-            const tick = setInterval(() => {
-                elapsed += 0.1;
-                if (elapsed < ROUND_SECONDS) {
-                    playerBox.textContent = emojis[rps[Math.floor(Math.random() * 3)]];
-                    botBox.textContent = emojis[rps[Math.floor(Math.random() * 3)]];
-                    const newCount = ROUND_SECONDS - Math.ceil(elapsed);
-                    if (newCount !== count && newCount > 0) {
-                        count = newCount;
-                        timerEl.textContent = count;
-                    }
-                } else {
-                    clearInterval(tick);
-                    const pChoice = userChoice || rps[Math.floor(Math.random() * 3)];
-                    showFinalChoices(pChoice, botChoice);
-                    timerEl.textContent = '';
-                    totalGames++;
-
-                    if (pChoice === botChoice) {
-                        showToastMsg('Draw! 🤝', 3);
-                    } else if (beats[pChoice] === botChoice) {
-                        wins++;
-                        showToastMsg('You Win! 🎉', 4);
-                    } else {
-                        losses++;
-                        showToastMsg('You Lose! 😞', 3);
-                    }
-
-                    updateScore();
-                    scoreEl.style.display = 'block';
-
-                    if (losses >= 10) {
-                        showToastMsg(`Game Over! You lost 10 times. Final: ${wins}W - ${losses}L`, 8);
-                        wins = 0;
-                        losses = 0;
-                        totalGames = 0;
-                        updateScore();
-                        endSession();
-                    } else {
-                        autoPlayTimer = setTimeout(playRound, AUTO_RESUME_SECONDS * 1000);
-                    }
-                }
-            }, 100);
-        }
-
-        options.addEventListener('click', (e) => {
-            const btn = e.target.closest('button[data-rps]');
-            if (!btn || !roundActive || userChoice) return;
-            userChoice = btn.dataset.rps;
-            options.querySelectorAll('button').forEach(b => b.disabled = true);
-        });
-
-        startBtn.addEventListener('click', () => {
-            if (roundActive) return;
-            roundActive = true;
-            startBtn.style.display = 'none';
-            wins = 0;
-            losses = 0;
-            totalGames = 0;
-            updateScore();
-            scoreEl.style.display = 'none';
-            playRound();
-        });
+    async init(container) {
+        const RockPaperScissors = (await import("./rock-paper-scissors.js")).default;
+        new RockPaperScissors(container);
     },
 };
 
@@ -867,6 +739,11 @@ demos['json-schema-validator'] = {
                 <button class="btn primary btn-sm" data-example="nested">Nested Arrays</button>
                 <button class="btn primary btn-sm" data-example="errors">Validation Errors</button>
             </div>
+            <div class="flex gap-2 items-center flex-wrap">
+                <label class="text-sm text-gray-600">Dummy count:</label>
+                <input type="number" id="tsv-count" class="form-element border rounded px-2 py-1 text-sm w-20" value="3" min="1" max="100" />
+                <button class="btn primary btn-sm" id="tsv-generate">Generate Dummy Data</button>
+            </div>
             <div class="tsv-editors">
                 <div class="tsv-field">
                     <label class="tsv-label">Schema (JSON)</label>
@@ -1028,6 +905,87 @@ demos['json-schema-validator'] = {
             }
         }
 
+        function generateDummyData(schema, count) {
+            function randomStr(len) {
+                const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                let r = '';
+                for (let i = 0; i < len; i++) r += chars[Math.floor(Math.random() * chars.length)];
+                return r;
+            }
+
+            function detectEmailPattern(regex) {
+                const s = regex.source;
+                return s.includes('@') && (s.includes('\\.[a-zA-Z]') || s.includes('\\.[A-Za-z]') || s.includes('\\.'));
+            }
+
+            function genValue(s) {
+                switch (s.kind) {
+                    case 'string': {
+                        if (s.pattern && detectEmailPattern(s.pattern)) {
+                            const names = ['alice', 'bob', 'charlie', 'dave', 'eve', 'frank', 'grace', 'hank', 'iris', 'jack'];
+                            const domains = ['example.com', 'test.org', 'demo.net', 'mail.co'];
+                            return names[Math.floor(Math.random() * names.length)] +
+                                Math.floor(Math.random() * 999) + '@' +
+                                domains[Math.floor(Math.random() * domains.length)];
+                        }
+                        const min = s.minLength || 3;
+                        const max = Math.min(s.maxLength || 15, 30);
+                        const len = Math.min(Math.max(min, Math.floor(Math.random() * (max - min + 1)) + min), max);
+                        return randomStr(len);
+                    }
+                    case 'number': {
+                        const min = s.min !== undefined ? s.min : 0;
+                        const max = s.max !== undefined ? s.max : 1000;
+                        let v = min + Math.random() * (max - min);
+                        if (s.integer) v = Math.round(v);
+                        return Math.round(v * 100) / 100;
+                    }
+                    case 'boolean': return Math.random() > 0.5;
+                    case 'literal': return s.value;
+                    case 'enum': return s.values[Math.floor(Math.random() * s.values.length)];
+                    case 'array': return [genValue(s.item)];
+                    case 'object': {
+                        const o = {};
+                        for (const [k, ps] of Object.entries(s.properties)) {
+                            if (ps.kind === 'optional' && Math.random() < 0.2) continue;
+                            if (ps.kind === 'nullable' && Math.random() < 0.2) { o[k] = null; continue; }
+                            o[k] = genValue(ps.kind === 'optional' || ps.kind === 'nullable' ? ps.inner : ps);
+                        }
+                        return o;
+                    }
+                    case 'optional': return Math.random() < 0.2 ? undefined : genValue(s.inner);
+                    case 'nullable': return Math.random() < 0.2 ? null : genValue(s.inner);
+                    case 'union': return genValue(s.variants[Math.floor(Math.random() * s.variants.length)]);
+                    default: return null;
+                }
+            }
+
+            const items = [];
+            for (let i = 0; i < count; i++) items.push(genValue(schema));
+            return count === 1 ? items[0] : items;
+        }
+
+        container.querySelector('#tsv-generate').addEventListener('click', () => {
+            let schemaJson;
+            try {
+                schemaJson = JSON.parse(schemaEl.value);
+            } catch (e) {
+                output.textContent = '❌ Invalid schema JSON:\n  ' + e.message;
+                return;
+            }
+            let schema;
+            try {
+                schema = parseSchema(schemaJson);
+            } catch (e) {
+                output.textContent = '❌ Schema error:\n  ' + e.message;
+                return;
+            }
+            const count = Math.max(1, parseInt(container.querySelector('#tsv-count').value, 10) || 1);
+            const dummy = generateDummyData(schema, count);
+            dataEl.value = JSON.stringify(dummy, null, 2);
+            output.textContent = `✅ Generated ${count} dummy record${count > 1 ? 's' : ''}. Click Validate to check against the schema.`;
+        });
+
         const examples = {
             user: {
                 schema: JSON.stringify({
@@ -1109,7 +1067,272 @@ demos['json-schema-validator'] = {
 demos['mini-prisma'] = {
     html: `<div id="mini-prisma-demo"><p class="text-gray-500 text-center py-8">Loading SQLite...</p></div>`,
     async init(container) {
-        await initMiniPrismaDemo(container);
+        const mod = await import("./mini-prisma-demo.js");
+        await mod.initMiniPrismaDemo(container);
+    },
+};
+
+demos['form-validator'] = {
+    html: `
+        <div class="fv-demo">
+            <div class="fv-config">
+                <span class="fv-config-label">Validate on:</span>
+                <label class="fv-config-opt"><input type="checkbox" id="fv-blur" checked /> Blur</label>
+                <label class="fv-config-opt"><input type="checkbox" id="fv-keydown" /> Keydown</label>
+                <label class="fv-config-opt"><input type="checkbox" id="fv-submit" checked disabled /> Submit</label>
+            </div>
+            <form id="fv-form" class="fv-form" novalidate>
+                <div class="fv-field" data-field="fullName">
+                    <label class="fv-label" for="fv-fullName">Full Name</label>
+                    <input class="fv-input" type="text" id="fv-fullName" name="fullName" placeholder="Enter your full name" />
+                    <span class="fv-error-msg"></span>
+                </div>
+                <div class="fv-field" data-field="email">
+                    <label class="fv-label" for="fv-email">Email Address</label>
+                    <input class="fv-input" type="email" id="fv-email" name="email" placeholder="you@example.com" />
+                    <span class="fv-error-msg"></span>
+                </div>
+                <div class="fv-row">
+                    <div class="fv-field" data-field="password">
+                        <label class="fv-label" for="fv-password">Password</label>
+                        <input class="fv-input" type="password" id="fv-password" name="password" placeholder="Min 8 characters" />
+                        <span class="fv-error-msg"></span>
+                    </div>
+                    <div class="fv-field" data-field="confirmPassword">
+                        <label class="fv-label" for="fv-confirmPassword">Confirm Password</label>
+                        <input class="fv-input" type="password" id="fv-confirmPassword" name="confirmPassword" placeholder="Re-enter password" />
+                        <span class="fv-error-msg"></span>
+                    </div>
+                </div>
+                <div class="fv-row">
+                    <div class="fv-field" data-field="age">
+                        <label class="fv-label" for="fv-age">Age</label>
+                        <input class="fv-input" type="number" id="fv-age" name="age" placeholder="18+" min="18" />
+                        <span class="fv-error-msg"></span>
+                    </div>
+                    <div class="fv-field" data-field="country">
+                        <label class="fv-label" for="fv-country">Country</label>
+                        <select class="fv-input fv-select" id="fv-country" name="country">
+                            <option value="">Select your country</option>
+                            <option value="US">United States</option>
+                            <option value="UK">United Kingdom</option>
+                            <option value="CA">Canada</option>
+                            <option value="AU">Australia</option>
+                            <option value="IN">India</option>
+                            <option value="DE">Germany</option>
+                            <option value="JP">Japan</option>
+                            <option value="BR">Brazil</option>
+                        </select>
+                        <span class="fv-error-msg"></span>
+                    </div>
+                </div>
+                <div class="fv-field fv-checkbox-field" data-field="terms">
+                    <label class="fv-checkbox-label">
+                        <input type="checkbox" id="fv-terms" name="terms" />
+                        <span>I agree to the <a href="#" class="fv-link">Terms of Service</a> and <a href="#" class="fv-link">Privacy Policy</a></span>
+                    </label>
+                    <span class="fv-error-msg"></span>
+                </div>
+                <button type="submit" class="btn primary fv-submit-btn" id="fv-submit-btn">Create Account</button>
+            </form>
+            <div id="fv-success" class="fv-success" style="display:none"></div>
+        </div>
+    `,
+    init(container) {
+        const field = {
+            text: (config) => ({ kind: 'text', ...config }),
+            email: (config) => ({ kind: 'email', ...config }),
+            password: (config) => ({ kind: 'password', ...config }),
+            number: (config) => ({ kind: 'number', ...config }),
+            select: (config) => ({ kind: 'select', ...config }),
+            checkbox: (config) => ({ kind: 'checkbox', ...config }),
+        };
+
+        const schema = {
+            fullName: field.text({ label: 'Full Name', required: true, minLength: 2 }),
+            email: field.email({ label: 'Email Address', required: true }),
+            password: field.password({ label: 'Password', required: true, minLength: 8 }),
+            confirmPassword: field.password({ label: 'Confirm Password', required: true, match: 'password' }),
+            age: field.number({ label: 'Age', required: true, min: 18, max: 120, integer: true }),
+            country: field.select({ label: 'Country', required: true, options: ['US', 'UK', 'CA', 'AU', 'IN', 'DE', 'JP', 'BR'] }),
+            terms: field.checkbox({ label: 'Terms & Conditions', required: true }),
+        };
+
+        function isEmpty(v) { return v === undefined || v === null || v === ''; }
+
+        function validateField(fieldDef, value, allValues) {
+            const errs = [];
+            const label = fieldDef.label;
+
+            if (fieldDef.required && isEmpty(value)) {
+                errs.push(fieldDef.kind === 'checkbox' ? `You must accept the ${label.toLowerCase()}` : `${label} is required`);
+                return errs;
+            }
+            if (!fieldDef.required && isEmpty(value)) return errs;
+
+            switch (fieldDef.kind) {
+                case 'text': {
+                    if (typeof value !== 'string') { errs.push(`${label} must be text`); break; }
+                    if (fieldDef.minLength !== undefined && value.length < fieldDef.minLength) errs.push(`${label} must be at least ${fieldDef.minLength} characters`);
+                    if (fieldDef.maxLength !== undefined && value.length > fieldDef.maxLength) errs.push(`${label} must be at most ${fieldDef.maxLength} characters`);
+                    if (fieldDef.pattern && !fieldDef.pattern.test(value)) errs.push(`${label} format is invalid`);
+                    break;
+                }
+                case 'email': {
+                    if (typeof value !== 'string') { errs.push(`${label} must be text`); break; }
+                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) errs.push('Please enter a valid email address');
+                    break;
+                }
+                case 'password': {
+                    if (typeof value !== 'string') { errs.push(`${label} must be text`); break; }
+                    if (fieldDef.minLength !== undefined && value.length < fieldDef.minLength) errs.push(`${label} must be at least ${fieldDef.minLength} characters`);
+                    if (fieldDef.match && allValues[fieldDef.match] !== undefined && value !== allValues[fieldDef.match]) errs.push('Passwords do not match');
+                    break;
+                }
+                case 'number': {
+                    const num = typeof value === 'string' ? parseFloat(value) : value;
+                    if (typeof num !== 'number' || isNaN(num)) { errs.push(`${label} must be a number`); break; }
+                    if (fieldDef.min !== undefined && num < fieldDef.min) errs.push(`${label} must be at least ${fieldDef.min}`);
+                    if (fieldDef.max !== undefined && num > fieldDef.max) errs.push(`${label} must be at most ${fieldDef.max}`);
+                    if (fieldDef.integer && !Number.isInteger(num)) errs.push(`${label} must be a whole number`);
+                    break;
+                }
+                case 'select': {
+                    if (typeof value !== 'string' || !fieldDef.options.includes(value)) errs.push(`Please select a valid option for ${label.toLowerCase()}`);
+                    break;
+                }
+                case 'checkbox': {
+                    if (value !== true) errs.push(`You must accept the ${label.toLowerCase()}`);
+                    break;
+                }
+            }
+            return errs;
+        }
+
+        function validateForm() {
+            const errors = {};
+            const data = {};
+            const formEl = container.querySelector('#fv-form');
+            const fd = new FormData(formEl);
+            for (const [k] of Object.entries(schema)) {
+                data[k] = fd.get(k);
+                if (k === 'terms') data[k] = fd.get(k) === 'on';
+                if (k === 'age') data[k] = fd.get(k) ? parseInt(fd.get(k), 10) : '';
+            }
+
+            for (const [fieldName, fieldDef] of Object.entries(schema)) {
+                const fieldErrors = validateField(fieldDef, data[fieldName], data);
+                if (fieldErrors.length > 0) errors[fieldName] = fieldErrors;
+            }
+            return { valid: Object.keys(errors).length === 0, errors, data };
+        }
+
+        function showFieldErrors(errors) {
+            container.querySelectorAll('.fv-field').forEach(el => {
+                const fieldName = el.dataset.field;
+                const msgEl = el.querySelector('.fv-error-msg');
+                const input = el.querySelector('input, select');
+                if (errors[fieldName]) {
+                    msgEl.textContent = errors[fieldName][0];
+                    el.classList.add('fv-invalid');
+                    if (input) input.setAttribute('aria-invalid', 'true');
+                } else {
+                    msgEl.textContent = '';
+                    el.classList.remove('fv-invalid');
+                    el.classList.remove('fv-valid');
+                    if (input) input.removeAttribute('aria-invalid');
+                }
+            });
+        }
+
+        function markFieldValid(fieldName) {
+            const el = container.querySelector(`.fv-field[data-field="${fieldName}"]`);
+            if (!el) return;
+            const msgEl = el.querySelector('.fv-error-msg');
+            if (msgEl.textContent) return;
+            el.classList.remove('fv-invalid');
+            el.classList.add('fv-valid');
+        }
+
+        function showSuccess(result) {
+            const successEl = container.querySelector('#fv-success');
+            successEl.style.display = 'block';
+            successEl.innerHTML = `
+                <div class="fv-success-icon">&#10003;</div>
+                <div class="fv-success-content">
+                    <strong>Account created successfully!</strong>
+                    <pre class="fv-success-data">${JSON.stringify(result.data, null, 2)}</pre>
+                </div>
+            `;
+        }
+
+        function hideSuccess() {
+            container.querySelector('#fv-success').style.display = 'none';
+        }
+
+        function submitForm(e) {
+            e.preventDefault();
+            const result = validateForm();
+            showFieldErrors(result.errors);
+            if (result.valid) {
+                showSuccess(result);
+            } else {
+                hideSuccess();
+            }
+        }
+
+        function validateSingle(fieldName) {
+            const formEl = container.querySelector('#fv-form');
+            const fd = new FormData(formEl);
+            const fieldDef = schema[fieldName];
+            if (!fieldDef) return;
+            let value = fd.get(fieldName);
+            if (fieldName === 'terms') value = fd.get(fieldName) === 'on';
+            if (fieldName === 'age') value = fd.get(fieldName) ? parseInt(fd.get(fieldName), 10) : '';
+            const data = {};
+            for (const [k] of Object.entries(schema)) {
+                data[k] = fd.get(k);
+                if (k === 'terms') data[k] = fd.get(k) === 'on';
+                if (k === 'age') data[k] = fd.get(k) ? parseInt(fd.get(k), 10) : '';
+            }
+            const errs = validateField(fieldDef, value, data);
+            const errors = {};
+            if (errs.length > 0) errors[fieldName] = errs;
+            showFieldErrors(errors);
+            if (errs.length === 0) markFieldValid(fieldName);
+            return errs;
+        }
+
+        // Event handlers
+        container.querySelector('#fv-form').addEventListener('submit', submitForm);
+        container.querySelector('#fv-submit').addEventListener('change', () => {
+            // Submit is always enabled; the checkbox is just visual feedback
+        });
+
+        container.querySelectorAll('.fv-input').forEach(input => {
+            const fieldName = input.name;
+
+            input.addEventListener('blur', () => {
+                if (container.querySelector('#fv-blur').checked) {
+                    validateSingle(fieldName);
+                }
+            });
+
+            input.addEventListener('input', () => {
+                if (container.querySelector('#fv-keydown').checked) {
+                    validateSingle(fieldName);
+                }
+                container.querySelector(`.fv-field[data-field="${fieldName}"]`)?.classList.remove('fv-valid');
+            });
+        });
+
+        // Validate on blur and input for checkboxes too
+        const termsCheck = container.querySelector('#fv-terms');
+        termsCheck.addEventListener('change', () => {
+            if (container.querySelector('#fv-blur').checked) {
+                validateSingle('terms');
+            }
+        });
     },
 };
 

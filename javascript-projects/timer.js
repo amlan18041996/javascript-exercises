@@ -1,6 +1,7 @@
-export default function Timer(output, timeInSeconds) {
+export default function Timer(output, timeInSeconds, callbacks) {
     output.innerText = "00 : 00 : 00";
     let interval;
+    const { onTick, onComplete } = callbacks || {};
     let timeValues = {
         seconds: 0,
         minutes: 0,
@@ -24,9 +25,11 @@ export default function Timer(output, timeInSeconds) {
             if (timeValues.hours === 0 && timeValues.minutes === 0 && timeValues.seconds === 0) {
                 clearInterval(interval);
                 clearValues();
+                if (onComplete) onComplete();
+                return;
             }
-            console.log(timeInSeconds);
             output.innerText = timeValues.time;
+            if (onTick) onTick(timeValues.hours, timeValues.minutes, timeValues.seconds);
         }, 1000);
     }
 

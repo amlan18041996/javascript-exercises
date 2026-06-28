@@ -103,4 +103,18 @@ export default function GuessWord(wordDomParent, resultDom) {
         placeholder();
         beautifyWordDom();
     }
+
+    this.checkGuess = function (guessedWord) {
+        const isCorrect = checkIfWin(guessedWord);
+        return {
+            isCorrect,
+            word: randomWord,
+            isGameOver: wrongGuessedWords.length + 1 >= totalTries,
+            remainingTries: totalTries - wrongGuessedWords.length - (isCorrect ? 0 : 1),
+        };
+    }
+
+    this.getRandomWord = function () {
+        return getWord();
+    }
 }

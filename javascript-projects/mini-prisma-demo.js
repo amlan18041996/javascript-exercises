@@ -1,5 +1,3 @@
-import initSqlJs from 'sql.js';
-
 let SQL = null;
 let db = null;
 let demoContainer = null;
@@ -197,6 +195,7 @@ function renderUI() {
 }
 
 export async function initMiniPrismaDemo(container) {
+  const initSqlJs = (await import('sql.js')).default;
   demoContainer = container;
   SQL = await initSqlJs({ locateFile: file => '/sql-wasm.wasm' });
   db = new SQL.Database();
