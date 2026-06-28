@@ -1,6 +1,7 @@
 {
   "name": "vanilla-forge",
   "version": "1.0.0",
+  "type": "module",
   "description": "A curated collection of vanilla JS & TS projects — interactive demos, reusable libraries, and a polished SPA showcase",
   "main": "index.js",
   "scripts": {

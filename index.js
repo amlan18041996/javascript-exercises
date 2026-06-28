@@ -1,8 +1,7 @@
-import { decorateTag, scrollToTop } from "./utilities/helpers.js";
+import { scrollToTop } from "./utilities/helpers.js";
 import { projects, stats } from "./javascript-projects/projects-data.js";
 import { tsProjects, tsStats } from "./typescript-projects/projects-data.js";
 import { subjects, topicLabels } from "./javascript-projects/about-data.js";
-import Carousel from "./javascript-projects/carousel.js";
 import demos from "./javascript-projects/project-demos.js";
 
 const allProjects = [...projects, ...tsProjects];
@@ -23,10 +22,38 @@ const pages = {
     projects: document.querySelector('#page-projects'),
 };
 
-function navigate(page) {
+function getPath(page, subroute) {
+    if (page === 'home') return '/';
+    if (page === 'projects') return subroute ? `/projects/${subroute}` : '/projects';
+    return `/${page}`;
+}
+
+function getRouteFromPath(path) {
+    const parts = path.split('/').filter(Boolean);
+    if (parts.length === 0) return { page: 'home', subroute: null };
+    if (parts[0] === 'projects') return { page: 'projects', subroute: parts[1] || null };
+    if (pages[parts[0]]) return { page: parts[0], subroute: null };
+    return { page: 'home', subroute: null };
+}
+
+function showPage(page, subroute) {
     Object.entries(pages).forEach(([key, el]) => el.classList.toggle('active', key === page));
     navLinks.forEach(a => a.classList.toggle('active', a.dataset.page === page));
-    window.location.hash = page;
+
+    if (page === 'projects') {
+        if (subroute && categoryInfo[subroute]) {
+            activateCategory(subroute);
+        } else {
+            document.querySelector('#project-categories').style.display = '';
+            document.querySelector('#projects-layout').style.display = 'none';
+            cleanupDemo();
+        }
+    }
+}
+
+function navigate(page, subroute) {
+    history.pushState({ page, subroute }, '', getPath(page, subroute));
+    showPage(page, subroute);
 }
 
 navLinks.forEach(a => a.addEventListener('click', e => {
@@ -34,9 +61,9 @@ navLinks.forEach(a => a.addEventListener('click', e => {
     navigate(a.dataset.page);
 }));
 
-window.addEventListener('hashchange', () => {
-    const hash = window.location.hash.slice(1) || 'home';
-    if (pages[hash]) navigate(hash);
+window.addEventListener('popstate', () => {
+    const { page, subroute } = getRouteFromPath(window.location.pathname);
+    showPage(page, subroute);
 });
 
 /* ===================== HOME STATS ===================== */
@@ -59,52 +86,79 @@ function renderStats() {
     `).join('');
 }
 
-/* ===================== PROJECT SIDEBAR ===================== */
+/* ===================== PROJECT CATEGORIES & NAVIGATION ===================== */
 
-function renderProjectList() {
-    const list = document.querySelector('#project-list');
+const categoryInfo = {
+    javascript: { title: 'JavaScript' },
+    typescript: { title: 'TypeScript' },
+    libraries: { title: 'Libraries' },
+};
 
-    function renderAccordion(label, projectList, open) {
-        return `
-            <div class="accordion-section">
-                <button class="accordion-toggle ${open ? 'open' : ''}" aria-expanded="${open}">
-                    <span>${label}</span>
-                    <svg class="accordion-arrow" viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
-                </button>
-                <ul class="accordion-content ${open ? 'open' : ''}">
-                    ${projectList.map(p => `
-                        <li data-id="${p.id}">
-                            <span class="dot" style="background:${p.color}"></span>
-                            ${p.title}
-                        </li>
-                    `).join('')}
-                </ul>
-            </div>
-        `;
-    }
-
-    list.innerHTML = renderAccordion('JavaScript', projects, true) + renderAccordion('TypeScript', tsProjects, true);
-
-    list.addEventListener('click', e => {
-        const toggle = e.target.closest('.accordion-toggle');
-        if (toggle) {
-            const expanded = toggle.getAttribute('aria-expanded') === 'true';
-            toggle.setAttribute('aria-expanded', String(!expanded));
-            toggle.classList.toggle('open');
-            toggle.nextElementSibling.classList.toggle('open');
-            return;
-        }
-        const li = e.target.closest('li');
-        if (li) showProject(li.dataset.id);
-    });
+function getProjectCategory(id) {
+    const p = allProjects.find(pr => pr.id === id);
+    return p ? p.category : null;
 }
 
-/* ===================== PROJECT DETAIL ===================== */
+function renderCategoryCards() {
+    for (const [cat] of Object.entries(categoryInfo)) {
+        const count = allProjects.filter(p => p.category === cat).length;
+        const el = document.getElementById(`count-${cat}`);
+        if (el) el.textContent = `${count} projects`;
+    }
 
-let currentDemoCleanup = null;
+    document.querySelector('#project-categories').addEventListener('click', e => {
+        const card = e.target.closest('.category-card');
+        if (card) navigate('projects', card.dataset.category);
+    });
+
+    document.querySelector('#back-to-categories').addEventListener('click', () => navigate('projects'));
+}
+
+function activateCategory(category) {
+    document.querySelector('#project-categories').style.display = 'none';
+    const layout = document.querySelector('#projects-layout');
+    layout.style.display = '';
+
+    document.querySelector('#sidebar-title').textContent = categoryInfo[category]?.title || 'Projects';
+
+    renderProjectListForCategory(category);
+
+    document.querySelector('#project-placeholder').style.display = '';
+    document.querySelector('#project-detail').style.display = 'none';
+    cleanupDemo();
+}
+
+function backToCategories() {
+    document.querySelector('#project-categories').style.display = '';
+    document.querySelector('#projects-layout').style.display = 'none';
+    cleanupDemo();
+}
+
+function renderProjectListForCategory(category) {
+    const list = document.querySelector('#project-list');
+    const filtered = allProjects.filter(p => p.category === category);
+    list.innerHTML = filtered.map(p => `
+        <li data-id="${p.id}">
+            <span class="dot" style="background:${p.color}"></span>
+            ${p.title}
+        </li>
+    `).join('');
+}
+
+/* ===================== PROJECT DETAIL WITH TABS ===================== */
+
+let currentProjectId = null;
+let demoInitTracker = {};
+
+function cleanupDemo() {
+    currentProjectId = null;
+    demoInitTracker = {};
+}
 
 function showProject(id) {
-    document.querySelectorAll('#project-list li').forEach(li => li.classList.toggle('active', li.dataset.id === id));
+    currentProjectId = id;
+    document.querySelectorAll('#project-list li').forEach(li =>
+        li.classList.toggle('active', li.dataset.id === id));
 
     const project = allProjects.find(p => p.id === id);
     if (!project) return;
@@ -113,8 +167,10 @@ function showProject(id) {
     const detail = document.querySelector('#project-detail');
     detail.style.display = 'block';
     document.querySelector('#detail-title').textContent = project.title;
+
     document.querySelector('#detail-desc').textContent = project.description;
-    document.querySelector('#detail-concepts').innerHTML = project.concepts.map(c => `<span class="concept-tag">${c}</span>`).join('');
+    document.querySelector('#detail-concepts').innerHTML =
+        project.concepts.map(c => `<span class="concept-tag">${c}</span>`).join('');
 
     const instrEl = document.querySelector('#detail-instructions');
     if (project.instructions) {
@@ -125,20 +181,41 @@ function showProject(id) {
         instrEl.style.display = 'none';
     }
 
+    switchTab('details');
+
     const inner = document.querySelector('#demo-inner');
     const demo = demos[id];
-
     if (demo) {
         inner.innerHTML = demo.html;
-        if (demo.init) {
-            setTimeout(() => demo.init(inner), 0);
-        }
     } else {
         inner.innerHTML = `<p class="text-gray-500 text-center py-8">Demo not available</p>`;
     }
+    demoInitTracker[id] = false;
 
     if (window.innerWidth < 768) {
         document.querySelector('#project-sidebar').scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(btn =>
+        btn.classList.toggle('active', btn.dataset.tab === tab));
+    document.querySelectorAll('.tab-panel').forEach(p =>
+        p.classList.toggle('active', p.id === `tab-${tab}`));
+
+    if (tab === 'demo' && currentProjectId && !demoInitTracker[currentProjectId]) {
+        const project = allProjects.find(p => p.id === currentProjectId);
+        if (project) {
+            const inner = document.querySelector('#demo-inner');
+            const demo = demos[project.id];
+            if (demo && demo.init) {
+                setTimeout(() => {
+                    try { Promise.resolve(demo.init(inner)).catch(() => {}); }
+                    catch (e) { console.warn('Demo init error:', e); }
+                }, 0);
+            }
+            demoInitTracker[project.id] = true;
+        }
     }
 }
 
@@ -166,7 +243,8 @@ searchInput?.addEventListener('input', () => {
 searchResults?.addEventListener('click', e => {
     const item = e.target.closest('.result-item');
     if (item && item.dataset.id) {
-        navigate('projects');
+        const cat = getProjectCategory(item.dataset.id);
+        navigate('projects', cat);
         showProject(item.dataset.id);
         searchInput.value = '';
         searchResults.classList.remove('show');
@@ -263,31 +341,22 @@ function showSubject(id) {
 
 /* ===================== INIT ===================== */
 
-function initBanner() {
-    new Carousel({
-        wrapperEl: '#banner-carousel',
-        mainEl: '.carousel',
-        delay: 3000,
-        isAutoPlay: true,
-        previousElAction: '#previous-slide',
-        nextElAction: '#next-slide',
-        onChange: (elPosition) => {
-            document.querySelector('.carousel-paginate').innerHTML = `${parseInt(elPosition.target, 10)}/6`;
-        },
-    });
-}
-
 function init() {
-    renderStats();
-    renderProjectList();
+    renderCategoryCards();
     renderSubjectList();
 
-    const hash = window.location.hash.slice(1) || 'home';
-    if (pages[hash]) navigate(hash);
+    document.querySelector('.project-tabs')?.addEventListener('click', e => {
+        const btn = e.target.closest('.tab-btn');
+        if (btn) switchTab(btn.dataset.tab);
+    });
 
-    if (document.querySelector('#banner-carousel')) {
-        decorateTag(initBanner);
-    }
+    document.querySelector('#project-list')?.addEventListener('click', e => {
+        const li = e.target.closest('li');
+        if (li) showProject(li.dataset.id);
+    });
+
+    const { page, subroute } = getRouteFromPath(window.location.pathname);
+    showPage(page, subroute);
 
     window.onscroll = function () {
         const scrollTop = document.getElementById('scroll-top');
